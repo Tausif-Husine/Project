@@ -5,11 +5,12 @@ from pathlib import Path
 #import commands 
 import Cmd.Chatbot as chat
 import Cmd.Img_generator as g
+#import Cmd.voice as v
 
 msg_list = []
 
-system_msg = ""
-messages.append({"role": "system", "content": system_msg})
+system_msg = "act like a sassy teacher"
+msg_list.append({"role": "system", "content": system_msg})
 
 class MesBot(Client):
     def onMessage(self, mid=None, author_id=None, message_object=None, thread_id=None, thread_type=ThreadType.USER, **kwargs):
@@ -18,6 +19,8 @@ class MesBot(Client):
             print(msg)
             if ("//video.xx.fbcdn" in msg):
                 msg = msg
+            if ("audio" in msg):
+            	msg = msg
             else:
                 msg = str(message_object).split(', ')[19][20:-1]
         except:
@@ -41,16 +44,23 @@ class MesBot(Client):
                 		self.sendImg(img_location, text, thread_id, thread_type)
                 		Path(img_location).unlink()
                 else:
-                	reply = chat.ChatBot(msg)
+                	msg_list.append({"role": "user", "content": msg})
+                	reply = chat.ChatBot(msg, msg_list)
+                	self.sendMsg(reply, thread_id, thread_type)
                 	msg_list.append({"role": "assistant", "content": reply})
                 	
-                	self.sendMsg(reply, thread_id, thread_type)
+                	#speech_path = str(v.tts(reply))
+                	#self.sendLocalFiles([speech_path], message=reply, thread_id=thread_id, thread_type=thread_type)
+                	#Path(speech_path).unlink()
 
     def sendMsg(self, reply, thread_id, thread_type):
         self.send(Message(text=reply), thread_id=thread_id, thread_type=thread_type)
         
     def sendImg(self, image_path, reply, thread_id, thread_type):
     	self.sendLocalImage(image_path, message=Message(text=reply), thread_id=thread_id, thread_type=thread_type)
+    
+    def sendFile(self, audio_path, message, thread_id, thread_type):
+    	self.sendLocalFiles(audio_path, message=message, thread_id=thread_id, thread_type=thread_type)
 
 try:
 	with open("Cookies.json", 'r') as file:
